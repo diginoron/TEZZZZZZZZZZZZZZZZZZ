@@ -3,6 +3,9 @@ import { GoogleGenAI } from '@google/genai';
 import { AcademicLevel, GenerateTopicRequest } from '../types';
 import { GEMINI_MODEL_PRO, getPromptForAcademicLevel } from '../constants';
 
+// Log API_KEY status at the module level for early debugging in Vercel logs
+console.log(`Module loaded: API_KEY is ${process.env.API_KEY ? 'defined' : 'NOT defined'} at module level.`);
+
 export default async function (req: VercelRequest, res: VercelResponse) {
   // === Start of top-level try-catch ===
   try {
