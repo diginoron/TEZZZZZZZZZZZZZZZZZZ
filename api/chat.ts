@@ -4,29 +4,30 @@ import { AcademicLevel, GenerateTopicRequest } from '../types';
 import { GEMINI_MODEL_PRO, getPromptForAcademicLevel } from '../constants';
 
 export default async function (req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
-
-  const { keywords, fieldOfStudy, academicLevel }: GenerateTopicRequest = req.body;
-
-  if (!keywords || !fieldOfStudy || !academicLevel) {
-    return res.status(400).json({ error: 'Missing required parameters (keywords, fieldOfStudy, academicLevel).' });
-  }
-
-  if (
-    academicLevel !== AcademicLevel.Masters &&
-    academicLevel !== AcademicLevel.PhD
-  ) {
-    return res.status(400).json({ error: 'Invalid academic level. Must be "کارشناسی ارشد" or "دکتری".' });
-  }
-
-  if (!process.env.API_KEY) {
-    console.error('SERVER_ERROR: API_KEY environment variable is not set. Please ensure it is configured in Vercel.');
-    return res.status(500).json({ error: 'خطای پیکربندی سرور: کلید API Gemini موجود نیست. لطفاً متغیر محیطی API_KEY را در Vercel تنظیم کنید.' });
-  }
-
+  // === Start of top-level try-catch ===
   try {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method Not Allowed' });
+    }
+
+    const { keywords, fieldOfStudy, academicLevel }: GenerateTopicRequest = req.body;
+
+    if (!keywords || !fieldOfStudy || !academicLevel) {
+      return res.status(400).json({ error: 'Missing required parameters (keywords, fieldOfStudy, academicLevel).' });
+    }
+
+    if (
+      academicLevel !== AcademicLevel.Masters &&
+      academicLevel !== AcademicLevel.PhD
+    ) {
+      return res.status(400).json({ error: 'Invalid academic level. Must be "کارشناسی ارشد" or "دکتری".' });
+    }
+
+    if (!process.env.API_KEY) {
+      console.error('SERVER_ERROR: API_KEY environment variable is not set. Please ensure it is configured in Vercel.');
+      return res.status(500).json({ error: 'خطای پیکربندی سرور: کلید API Gemini موجود نیست. لطفاً متغیر محیطی API_KEY را در Vercel تنظیم کنید.' });
+    }
+
     // Create a new GoogleGenAI instance for each request to ensure it uses the latest API key from env
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const prompt = getPromptForAcademicLevel(academicLevel, fieldOfStudy, keywords);
@@ -62,20 +63,20 @@ export default async function (req: VercelRequest, res: VercelResponse) {
 
   } catch (error: unknown) {
     // Log detailed error information to Vercel logs
-    console.error('SERVER_ERROR: An error occurred in the Gemini API route.');
+    console.error('TOP_LEVEL_SERVER_ERROR: An unhandled error occurred in the Vercel API route.');
     if (error instanceof Error) {
-      console.error('SERVER_ERROR: Error message:', error.message);
-      console.error('SERVER_ERROR: Error stack:', error.stack);
+      console.error('TOP_LEVEL_SERVER_ERROR: Error message:', error.message);
+      console.error('TOP_LEVEL_SERVER_ERROR: Error stack:', error.stack);
     } else if (typeof error === 'object' && error !== null) {
-      console.error('SERVER_ERROR: Detailed error object:', JSON.stringify(error));
+      console.error('TOP_LEVEL_SERVER_ERROR: Detailed error object:', JSON.stringify(error));
     } else {
-      console.error('SERVER_ERROR: Unknown error type:', error);
+      console.error('TOP_LEVEL_SERVER_ERROR: Unknown error type:', error);
     }
 
     if (!res.headersSent) {
       // If no headers sent, it means the error occurred before streaming started.
       res.status(500).json({
-        error: 'خطا در تولید موضوعات از Gemini API. لطفاً کلید API خود را بررسی کرده و مجدداً امتحان کنید. برای جزئیات بیشتر به لاگ‌های Vercel مراجعه کنید.'
+        error: 'خطا در سرور (500): یک خطای غیرمنتظره در اجرای تابع رخ داد. لطفاً لاگ‌های Vercel را برای جزئیات بیشتر بررسی کنید.'
       });
     } else {
       // If headers already sent (streaming started), send an error chunk and end.
@@ -84,4 +85,5 @@ export default async function (req: VercelRequest, res: VercelResponse) {
       res.end();
     }
   }
+  // === End of top-level try-catch ===
 }
