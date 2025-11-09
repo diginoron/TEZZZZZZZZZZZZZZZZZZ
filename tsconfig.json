@@ -26,6 +26,6 @@
       "@/api/*": ["./api/*"]
     }
   },
-  "include": ["src", "index.tsx", "api/**/*.ts", "types.ts", "constants.ts", "components/**/*.tsx", "services/**/*.ts", "App.tsx"],
+  "include": ["index.tsx", "api/**/*.ts", "types.ts", "constants.ts", "components/**/*.tsx", "services/**/*.ts", "App.tsx"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
