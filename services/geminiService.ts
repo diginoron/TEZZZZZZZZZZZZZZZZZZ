@@ -1,4 +1,3 @@
-
 import { GenerateTopicRequest, GenerateTopicResponseChunk } from '../types';
 
 /**
@@ -20,8 +19,18 @@ export async function* generateTopicsStream(
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `خطا در سرور: ${response.statusText}`);
+      let errorMessage = `خطا در سرور: ${response.status} ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorMessage;
+      } catch (jsonParseError) {
+        // If response.json() fails, it means the server sent a non-JSON error.
+        // Read it as plain text for better debugging and display.
+        const responseText = await response.text();
+        console.error('خطا در تجزیه پاسخ خطا به عنوان JSON. پاسخ خام:', responseText);
+        errorMessage = `خطا در سرور (${response.status}): ${responseText || response.statusText}`;
+      }
+      throw new Error(errorMessage);
     }
 
     if (!response.body) {
@@ -77,4 +86,3 @@ export async function* generateTopicsStream(
     throw new Error('خطای ناشناخته‌ای در حین تولید موضوعات رخ داد.');
   }
 }
-    
