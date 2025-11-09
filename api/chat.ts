@@ -29,6 +29,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
     }
 
     // Create a new GoogleGenAI instance for each request to ensure it uses the latest API key from env
+    // Moved here to ensure API_KEY check passes before instantiation
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const prompt = getPromptForAcademicLevel(academicLevel, fieldOfStudy, keywords);
 
