@@ -1,0 +1,5 @@
+{
+  "name": "Gemini Research Topic Generator",
+  "description": "یک اپلیکیشن برای تولید موضوعات پژوهشی بر اساس ورودی‌های کاربر و سطح مقطع با استفاده از هوش مصنوعی Gemini.",
+  "requestFramePermissions": []
+}
