@@ -1,4 +1,3 @@
-
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI } from '@google/genai';
 import { AcademicLevel, GenerateTopicRequest } from '../types';
@@ -23,8 +22,8 @@ export default async function (req: VercelRequest, res: VercelResponse) {
   }
 
   if (!process.env.API_KEY) {
-    console.error('API_KEY environment variable is not set.');
-    return res.status(500).json({ error: 'Server configuration error: Gemini API key is missing. Please set the API_KEY environment variable in Vercel.' });
+    console.error('SERVER_ERROR: API_KEY environment variable is not set. Please ensure it is configured in Vercel.');
+    return res.status(500).json({ error: 'خطای پیکربندی سرور: کلید API Gemini موجود نیست. لطفاً متغیر محیطی API_KEY را در Vercel تنظیم کنید.' });
   }
 
   try {
@@ -62,16 +61,27 @@ export default async function (req: VercelRequest, res: VercelResponse) {
     res.end();
 
   } catch (error: unknown) {
-    console.error('Error calling Gemini API:', error);
+    // Log detailed error information to Vercel logs
+    console.error('SERVER_ERROR: An error occurred in the Gemini API route.');
+    if (error instanceof Error) {
+      console.error('SERVER_ERROR: Error message:', error.message);
+      console.error('SERVER_ERROR: Error stack:', error.stack);
+    } else if (typeof error === 'object' && error !== null) {
+      console.error('SERVER_ERROR: Detailed error object:', JSON.stringify(error));
+    } else {
+      console.error('SERVER_ERROR: Unknown error type:', error);
+    }
+
     if (!res.headersSent) {
       // If no headers sent, it means the error occurred before streaming started.
-      res.status(500).json({ error: 'Failed to generate topics from Gemini API. Please check your API key and network connection.' });
+      res.status(500).json({
+        error: 'خطا در تولید موضوعات از Gemini API. لطفاً کلید API خود را بررسی کرده و مجدداً امتحان کنید. برای جزئیات بیشتر به لاگ‌های Vercel مراجعه کنید.'
+      });
     } else {
       // If headers already sent (streaming started), send an error chunk and end.
       // This ensures the client knows streaming stopped unexpectedly.
-      res.write(JSON.stringify({ error: 'An unexpected error occurred during streaming.', done: true }) + '\n');
+      res.write(JSON.stringify({ error: 'یک خطای غیرمنتظره در حین استریم رخ داد.', done: true }) + '\n');
       res.end();
     }
   }
 }
-    
