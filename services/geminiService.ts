@@ -20,13 +20,14 @@ export async function* generateTopicsStream(
 
     if (!response.ok) {
       let errorMessage = `خطا در سرور: ${response.status} ${response.statusText}`;
+      // Read the response body once as plain text
+      const responseText = await response.text();
+      
       try {
-        const errorData = await response.json();
+        const errorData = JSON.parse(responseText);
         errorMessage = errorData.error || errorMessage;
       } catch (jsonParseError) {
-        // If response.json() fails, it means the server sent a non-JSON error.
-        // Read it as plain text for better debugging and display.
-        const responseText = await response.text();
+        // If JSON parsing fails, use the raw text as the error message
         console.error('خطا در تجزیه پاسخ خطا به عنوان JSON. پاسخ خام:', responseText);
         errorMessage = `خطا در سرور (${response.status}): ${responseText || response.statusText}`;
       }
